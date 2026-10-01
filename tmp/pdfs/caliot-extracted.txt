@@ -1,0 +1,801 @@
+PAGE 1
+                                                International Journal of Heat and Mass Transfer 222 (2024) 125139
+
+
+                                                  Contents lists available at ScienceDirect
+
+                  International Journal of Heat and Mass Transfer
+
+
+                                            journal homepage: www.elsevier.com/locate/ijhmt
+
+
+
+Coupled heat transfers resolution by Monte Carlo in urban geometry
+including direct and diﬀuse solar irradiations
+Cyril Caliot a,∗, Louis d’Alençon b, Stéphane Blanco c, Vincent Forest d, Richard Fournier c,
+Frédéric Hourdin b, Florent Retailleau a, Robert Schoetter e, Najda Villefranque b
+
+a CNRS, UPPA, E2S, LMAP, 1 Allée du Parc Montaury, 64600, Anglet, France
+b LMD/IPSL/SU, CNRS, Paris, France
+c Laplace, INP/Université de Toulouse/CNRS, Toulouse, France
+d Méso-Star, Longages, France
+e CNRM, Université de Toulouse, Météo-France, CNRS, Toulouse, France
+
+
+
+A R T I C L E    I N F O          A B S T R A C T
+
+
+Keywords:                                      Modelling transient combined heat transfer in complex urban geometry is a key step to predict human exposure
+Coupled heat transfer                               or energy consumption and to quantify the eﬀect of climate change mitigation and adaptation measures. A
+Monte Carlo                                    diﬃculty lies in the possibility for a model to scale up and integrate large and complex urban morphology. We
+Solar irradiation
+                                              develop a probabilistic approach to solve heat transfers with the Monte Carlo method that is insensitive to the
+Indoor and outdoor human thermal comfort
+                                               complexity of both the urban geometry and the boundary conditions. The integral formulation that includes
+Building energy consumption
+Thermal inertia                             random walks for each heat transfer mode is presented and the computation of absorbed solar irradiations at
+                                                  walls with the double randomization technique is detailed. Numerical validations are given through comparisons
+                                              with deterministic method results for single and two-layer slabs, but also a three-dimensional thermal bridge
+                                               geometry. The developed probabilistic heat transfer model is then used in a demonstration heat wave scenario
+                                          where are computed: the outdoor mean radiant temperature showing the inﬂuence of trees; and the indoor
+                                               average wall temperature showing the inﬂuence of solar gains through windows.
+
+
+
+
+1. Introduction                                                            (2) Urban microclimate models associated with building energy models
+                                                                         are used to predict building performances [9] and outdoor pedestrian
+  Human health [1] and energy consumption [2] are aﬀected by the     thermal comfort [10]; (3) Heat transfer models (e.g., ﬁnite volume
+city microclimate, speciﬁcally during heat waves where their impacts     or ﬁnite element methods) are used to evaluate or optimize building
+are enhanced by the local climate change associated to a growing ur-     envelopes [11] and component thermal performances [12]. Charac-
+banization and population density [3]. Adaptation measures should be      teristic space and time increments decrease from ﬁrst to third family
+found to avoid vulnerability to extreme heat by limiting urban temper-    and the most reﬁned results are used to develop and validate coarser
+ature rise and improving resilience of the city fabric. Numerical evalua-    approximate models. This upscaling methodology is subjected to ap-
+tions of such adaptation measures represent a diﬃcult task requiring to     proximations or parametrizations hypothesis which may be validated
+consider the atmospheric boundary layer and the city complexity where    by experimental measurements presenting increasing uncertainties with
+heat and mass transfers are strongly coupled between a large diversity     the spatio-temporal scales. Thus, there is a lack of numerical methods
+of materials and spatio-temporal scales [4,5].                               that support accurately the scaling up and can be applied on this range
+   To tackle this challenge, physical deterministic (mesh-based) mod-     of scales (i.e., from mm to m and km) to numerically validate the as-
+els have been developed that may be classiﬁed in three complementary    sumptions and parametrizations.
+families covering diﬀerent spatio-temporal scales: (1) Urban canopy       Although  it is well-known that the Monte Carlo method (MCM)
+models [6] simulate the urban surface energy balance assuming a sim-     [13] can solve linear integrals whatever the domain size and num-
+pliﬁed urban geometry (e.g., an inﬁnitely-long street canyon [7]) in     ber of dimensions, it has only recently been foreseen to solve for the
+numerical weather prediction, regional and global climate models [8];     temperature with a single MCM algorithm where conduction-radiation-
+
+
+
+ * Corresponding author.
+    E-mail address: cyril.caliot@cnrs.fr (C. Caliot).
+
+https://doi.org/10.1016/j.ijheatmasstransfer.2023.125139
+Received 24 May 2023; Received in revised form 24 November 2023; Accepted 22 December 2023
+Available online 9 January 2024
+0017-9310/© 2023 Elsevier Ltd. All rights reserved.
+
+PAGE 2
+C. Caliot, L. d’Alençon, S. Blanco et al.                                                                                       International Journal of Heat and Mass Transfer 222 (2024) 125139
+
+
+  Nomenclature
+
+   Latin symbols                                               𝜆        wavelength
+                                           Ω         solid angle
+  𝐶𝑝       speciﬁc heat capacity
+                                                                                              ⃗𝜔         direction vector
+         domain
+                                                               𝜌         density or reﬂectivity
+  𝐷         direct normal irradiation
+                                                           𝜎        standard error
+  𝑑         thickness
+                                                                        𝜏        time
+  𝐹         Fresnel’s reﬂectivity
+                                                             𝜃𝑅        radiative temperature  𝑓        function
+                                                                        𝜃𝑑        Sun’s half angle  ℎ        heat transfer coeﬃcient
+   𝐻(⋅)     Heaviside’s test function                                          Superscripts
+ 𝐻        irradiation                                                   ∩        hemispherical
+   𝐼         radiative intensity                                                    𝐹        specular surface
+   𝐼𝑏       blackbody radiative intensity                    𝐿       Lambertian surface
+  𝑘        thermal conductivity                                                                     ′                                                                                        directional
+     ⃗𝑛       outward normal vector
+ 𝑁      number of samples                                               Subscripts
+   (𝑛,𝑘)    complex refractive index                                   1,2      indexes for solids
+  𝑃         probability                                              𝑏       body
+   𝑝       PDF                                     𝐶        conduction
+     ̇𝑞        heat ﬂux                             𝐷         Dirichlet’s condition
+   ⃗𝑅        specular direction                                    𝑑         direct
+  𝑆        surface area                                                𝑒         external
+  𝑇        temperature                                  𝐹       ﬂuid domain or specular surface
+    𝑡        time                                                  𝑔        ground
+ 𝑊    MCM weight                                            𝐼           initial condition
+     ⃗𝑥, ⃗𝑦      coordinate vectors                                                            𝑖          internal, or index
+                                                                                        𝑗, 𝑘      indexes
+   Greek symbols
+                                             𝐿       Lambertian surface
+  𝛼        thermal diﬀusivity                                     𝑛       number of jumps
+   𝛿         Dirac’s delta function                                      𝑜         solar
+   𝛿𝑏       boundary reinjection length                    𝑅        radiation
+  Δ𝐸       scaled diﬀerence                                                𝑟        diﬀuse solar radiation or reference radiative temperature
+   𝜀         emissivity                                           𝑆,𝑠       solid domain
+   𝜖𝑏        absorbing thickness                                 𝑇          total
+
+
+
+convection [14] are coupled. Early studies at steady-state [15,16] and     the ability to manage large and complex three-dimensional (3D) ge-
+transient [17] regimes have demonstrated the ability of MCM algo-    ometry [22]. In addition, Penazzi et al. [23] showed that the MCM
+rithms to solve for conductive, advective and radiative heat transfers in     algorithms developed to solve coupled heat transfers may be used to es-
+three-dimensional porous media with opaque solid surfaces and trans-     timate and store propagators when heterogeneous and transient sources
+parent ﬂuid subdomains. Indeed, the heat transfer equation in a solid,     are known. This enables re-using propagators to evaluate their corre-
+with Robin’s boundary condition (RBC), has been coupled to the radia-    sponding probe temperatures when the sources are diﬀerent leading to
+tive transfer equation (RTE) trough the double randomization technique    a drastic reduction of computation time. However, in the speciﬁc appli-
+(DRT) [18] allowing one to build conduction-advection-radiation ran-     cation of urban physics, the outdoor and indoor absorbed solar irradia-
+dom paths represented as broken lines linking the sources to a probe     tions are unknown sources that originate from direct and diﬀuse solar
+calculation point. Although, the physical concepts are well established,     irradiations but also from multiple reﬂections within the complex geom-
+it is very recently that the theoretical framework was exposed by Tregan      etry. Thus, to solve coupled heat transfers in urban environments with
+et al. [19] in case of transient heat transfer in adjacent semi-transparent    a single MCM algorithm that is insensitive to geometrical reﬁnements,
+ﬂuid and solid subdomains. Tregan et al. [19] established the proba-     the existing theoretical framework [19,20,23] should be enriched with
+bilistic thermal model in linear situations when the Green’s functions    a model for solar sources and their coupling to thermal heat transfers.
+are known, that includes a recursive coupling of each heat transfer       The purpose of this article is to present a new probabilistic model
+mode. This approach was also generalized to unknown propagators by    based on the theoretical framework of Tregan et al. [19] to solve lin-
+translating each heat transfer mode into stochastic processes and us-     earized transient conduction-radiation problems with RBC in complex
+ing Feynman-Kac’s formula. The same recursive structure was found    3D urban geometry including Lambertian and specular surfaces where
+for the probabilistic heat transfer mode couplings. Moreover, using the     solar irradiations are unknown and need to be calculated with MCM.
+same framework in steady-state regime, Ibarrart et al. [20,16] added the    Only sensible heat transfer through solids is considered and not the one
+resolution of advective heat transfer in ﬂuid subdomains enclosed by     originating from moisture heat and mass transfer [24]. Nevertheless, the
+opaque solids. They also demonstrated that the MCM approach was in-    proposed model will allow one to consider new scientiﬁc questions by
+sensitive to the geometry size. Indeed, this new approach has beneﬁted     unlocking the feasibility of new simulations in complex and large urban
+practically from the computer graphics advances in image synthesis     geometry. To illustrate the model capabilities, a heat wave scenario is
+with MCM techniques [21] by the public release of eﬃcient free soft-    chosen as a demonstration case where key variables of the outdoor hu-
+ware which guaranty independence between the MCM algorithm and    man thermal comfort and building energy consumptions are computed
+the complex data representation while insuring fast access to data and     accounting for detailed tree geometry or indoor solar gains.
+
+                                                                        2
+
+PAGE 3
+C. Caliot, L. d’Alençon, S. Blanco et al.                                                                                       International Journal of Heat and Mass Transfer 222 (2024) 125139
+
+   In Sect. 2, the MCM algorithm involving the mixed random walks    be considered. The ﬁrst one corresponds to the atmospheric air temper-
+is presented with a detailed description of the solar ﬂux density man-     ature surrounding the buildings and provided by meteorological data,
+agement at urban geometry walls. Section 3 gathers the 1D and 3D    𝑇𝐹≡𝑇𝐹,𝑒. The second one is the temperature of the ﬂuid inside an en-
+numerical validations and Sect. 4 demonstrates the ability of the pro-     closure (closed habitation room) assumed perfectly stirred, 𝑇𝐹≡𝑇𝐹,𝑖.
+posed model to compute temperatures involved in the evaluation of    Although an additional model may be formulated to compute 𝑇𝐹,𝑖, such
+outdoor comfort and energy consumption during a heat wave sce-     as a function of a given heating system inside each room, these room air
+nario.                                                                temperatures are assumed known in this study. ̇𝑞𝑅(Eq. (3)) is formu-
+                                                                             lated with an expression similar to Eq. (2) but the radiative temperature,
+2. Probabilizing coupled heat-transfer and solving with a Monte      𝜃𝑅, is unknown. Indeed, after a linearization of the net exchange rate
+Carlo algorithm                                                            of thermal radiation between the surface and its environment, Eq. (3) is
+                                                                      obtained that includes the radiative temperature, 𝜃𝑅, which is the inte-
+   The goal of the present heat transfer model (HTM) is to compute:        gral of the radiance temperature over the hemisphere solid angles. For
+                                                                            conciseness, the derivation of Eq. (3) and the integral formulation of 𝜃𝑅
+    • either a probe temperature for a solid material in an urban envi-      is not replicated but may be found in the work of Penazzi et al. [23]
+    ronment, where the probe temperature may be deﬁned as the solid    and Bati et al. [25] (and also in Tregan et al. [19] for semi-transparent
+    temperature at a speciﬁc location or as a surface or volume average     media). The absorbed solar irradiation is also unknown and its expres-
+    temperature;                                                          sion is given in Eq. (4) involving the unknown incident solar radiative
+    • or an infrared radiance temperature, i.e. the intensity of radiation     intensity 𝐼𝑜. To compute ̇𝑞𝑅and ̇𝑞𝑜the RTE, Eq. (5a), and its bound-
+     at a given location in a given direction, spectrally integrated over     ary condition, Eq. (5b), should be solved in transparent media (𝐹)
+    the whole infrared.                                            between opaque surfaces:
+
+                                                  ⎧ ⃗𝜔𝑖⋅∇𝐼(⃗𝑥, ⃗𝜔𝑖,𝜆) = 0,                    ⃗𝑥∈𝐹,     (a)
+In this model, transient conductive heat transfer (Eq. (1a)) is consid-   ⎪                                                                                     𝐼(⃗𝑦𝑖,−⃗𝜔𝑖,𝜆)ered inside each of the solid parts of the system (e.g., walls, windows,   ⎪
+                                                  ⎪  = 𝜀(⃗𝑦𝑖+1,−⃗𝜔𝑖,𝜆)𝐼𝑏(⃗𝑦𝑖+1,𝜆)ground). They are divided into subparts where the solid properties are                                                  ⎨                                                                   (5)
+uniform and isotropic. As far as radiation is concerned, solid media are   ⎪   + ∫ 𝑑Ω(⃗𝜔𝑖+1) 𝜌′′(⃗𝑦𝑖+1,−⃗𝜔𝑖| −⃗𝜔𝑖+1,𝜆)
+either transparent or opaque (no semi-transparent media). Each solid   ⎪        2𝜋
+sub-part 𝑆is deﬁned as occupying a domain 𝑆. At the initial time       ⎪⎩    × |⃗𝜔𝑖+1 ⋅⃗𝑛𝑖+1|𝐼(⃗𝑦𝑖+1,−⃗𝜔𝑖+1,𝜆),        ⃗𝑦∈𝜕𝑆,𝐹.  (b)
+𝜏𝐼the solid is isothermal within each sub-part at a temperature noted
+                                                                    with  𝜌′′ the reciprocal bidirectional reﬂection distribution function
+𝑇𝐼(Eq. (1b)). The boundary of 𝑆is noted 𝜕𝑆and is potentially
+                                                                   (BRDF), 𝜀the material directional emissivity, and 𝐼𝑏the Planck’s law ofsplit into three parts: solid-solid (𝜕𝑆,𝑆) or solid-ﬂuid (𝜕𝑆,𝐹) inter-
+                                                                   blackbody radiative intensity. The numbering of the positions and di-
+faces, and parts with a Dirichlet boundary condition (𝜕𝑆,𝐷). For the
+                                                                             rections follows a reverse radiative path as depicted in Fig. 1b. Most of
+Dirichlet boundary conditions, the boundary temperature is known and
+                                                                        the surfaces are considered Lambertian (𝐿𝑆,𝐹, Eq. (7)) and some areis noted 𝑇𝐷(Eq. (1c)). On 𝜕𝑆,𝑆, the model for the interface is ﬂux con-
+tinuity, i.e. equalling the conductive ﬂuxes in the two adjacent solids    assumed specular (𝐹𝑆,𝐹, Eq. (8)) to represent window glasses. In addi-
+(Eq. (1d)). On 𝜕𝑆,𝐹, the model for the interface is also a ﬂux conti-      tion, the BRDF may be expressed as the product of an angular function
+nuity, this time equalling the conductive ﬂux inside the solid with the     (𝑓𝜌) and a reﬂection probability (𝑃𝜌):
+sum of the convective and radiative ﬂuxes on the ﬂuid part, leading to
+a Robin boundary condition (RBC, Eq. (1e)).                                     𝜌′′(⃗𝑦𝑖+1,−⃗𝜔𝑖| −⃗𝜔𝑖+1,𝜆) = 𝑓𝜌(⃗𝑦𝑖+1,−⃗𝜔𝑖| −⃗𝜔𝑖+1,𝜆) 𝑃𝜌(⃗𝑦𝑖+1,−⃗𝜔𝑖+1,𝜆), (6)
+                                                                           1
+⎧ 𝜕                                                                                              𝜌′′𝐿(⃗𝑦𝑖+1,𝜆) = 𝜋𝜌∩∩(⃗𝑦𝑖+1,𝜆),                                         (7)       = 𝛼Δ𝑇𝑠(⃗𝑥,𝑡),                 ⃗𝑥∈𝑆, 𝑡> 𝜏𝐼,      (a)⎪ 𝜕𝑡𝑇𝑠(⃗𝑥,𝑡)                                                                                       ))
+⎪ 𝑇𝑠(⃗𝑥,𝑡) = 𝑇𝐼,                      ⃗𝑥∈𝑆∪𝜕𝑆,                                   𝛿( ⃗𝜔𝑖+1 −⃗𝑅(−𝜔𝑖,⃗    ⃗𝑛𝑖+1⎪                                                                                                                                    𝐹(⃗𝑦𝑖+1,−⃗𝜔𝑖+1,𝜆),                                                                                              𝜌′′𝐹(⃗𝑦𝑖+1,−⃗𝜔𝑖| −⃗𝜔𝑖+1,𝜆) =⎨                                     𝑡⩽𝜏𝐼,              (b)                                                                                                                                                                                                                                                                                            || ⃗𝜔𝑖+1 ⋅⃗𝑛𝑖+1||⎪ 𝑇𝑠(⃗𝑦,𝑡) = 𝑇𝐷(⃗𝑦,𝑡),                       ⃗𝑦∈𝜕𝑆,𝐷, 𝑡> 𝜏𝐼,  (c)
+⎪ 𝑘𝑠,1 ∇𝑇𝑠(⃗𝑦,𝑡) ⋅⃗𝑛1 = 𝑘𝑠,2 ∇𝑇𝑠(⃗𝑦,𝑡) ⋅⃗𝑛2,        ⃗𝑦∈𝜕𝑆,𝑆, 𝑡> 𝜏𝐼,  (d)          {                                              (8)
+⎪⎩ 𝑘𝑠∇𝑇𝑠(⃗𝑦,𝑡) ⋅⃗𝑛= ̇𝑞𝐹(⃗𝑦,𝑡) + ̇𝑞𝑅(⃗𝑦,𝑡) + ̇𝑞𝑜(⃗𝑦,𝑡),  ⃗𝑦∈𝜕𝑆,𝐹, 𝑡> 𝜏𝐼,  (e)                               𝜌∩∩(⃗𝑦𝑖+1,𝜆),        for Lambertian surfaces,
+                                                                               𝑃𝜌(⃗𝑦𝑖+1,−⃗𝜔𝑖+1,𝜆) =                                                 (9)
+                                                                     (1)                             𝐹(⃗𝑦𝑖+1,−⃗𝜔𝑖+1,𝜆),  for specular surfaces,
+             𝑘𝑠
+where 𝛼=                        is the solid thermal diﬀusivity; 𝑘𝑠, the thermal con-    where 𝜌∩∩is the hemispherical-hemispherical reﬂectivity, 𝛿is the
+            𝜌𝑠𝐶𝑝,𝑠                                                             Dirac’s delta function, ⃗𝑅is the specular direction, and 𝐹is the Fres-
+ductivity; 𝜌𝑠, the density; 𝐶𝑝,𝑠, the speciﬁc heat capacity; ⃗𝑛, the local     nel reﬂectivity dependent on the incident direction.
+outward normal (subscripts 1 and 2 stand for two adjacent solids in       The resolution of the presented HTM requires to solve for the
+perfect contact). The RBC (Eq. (1e)) includes ̇𝑞𝐹, the rate of heat trans-     heat transfer equations (Eqs. (1a)-(1e)) coupled to resolutions of RTE
+fer by convection, ̇𝑞𝑅, the net exchange rate of heat transfer by thermal     (Eqs. (5a)-(5b)) for thermal and solar radiative heat transfer. Tregan
+radiation (linearized), and ̇𝑞𝑜, the absorbed solar irradiation that is the     et al. [19] have shown that a probe computation of the solid temper-
+sum of the direct ( ̇𝑞𝑜,𝑑) and diﬀuse ( ̇𝑞𝑜,𝑟) solar irradiations.                 ature by MCM may be done through the sampling of heat paths that
+                                                                         explores the domain backward in time until reaching a known source.
+̇𝑞𝐹(⃗𝑦,𝑡) = ℎ𝐹(⃗𝑦,𝑡)[𝑇𝐹(⃗𝑦,𝑡) −𝑇𝑠(⃗𝑦,𝑡)],                                (2)       If 𝑇𝑠(⃗𝑦0, 𝑡0) is the quantity to estimate (with ⃗𝑦0 ∈𝜕𝑆,𝐹and 𝑡0 > 𝜏𝐼),
+                                                                        the MCM algorithm will draw 𝑁realizations of the MCM weight 𝑊𝑘tȯ𝑞𝑅(⃗𝑦,𝑡) = ℎ𝑅(⃗𝑦)[𝜃𝑅(⃗𝑦,𝑡) −𝑇𝑠(⃗𝑦,𝑡)],                                  (3)
+                                                                          build an estimate ̃𝑇𝑠of 𝑇𝑠and its associated standard error:       +∞
+                                 ∑𝑁 ̇𝑞𝑜(⃗𝑦,𝑡) =       ∫ 𝑑𝜆∫ 𝑑Ω(⃗𝜔)  ||⃗𝜔⋅⃗𝑛|| 𝜀(⃗𝑦,𝜆) 𝐼𝑜(⃗𝑦,𝑡,−⃗𝜔,𝜆).               (4)                                                                                 𝑊𝑘,                                                                                       𝑇𝑠(⃗𝑦0,𝑡0) ≈̃𝑇𝑠(⃗𝑦0,𝑡0) = 1           0     2𝜋                                        𝑁
+                                                                                                   𝑘=1
+The expression of ̇𝑞𝐹(Eq. (2)) is given by the Newton’s Law of Cooling      √√
+                               √ ∑𝑁                                                                      1involving         the             heat                    transfer coeﬃcient                               by                                      convection                                                     a homoge-                                    √1                                    ℎ𝐹and                                                     𝑊2𝑘−̃𝑇2𝑠(⃗𝑦0,𝑡0).                                            𝑁neous ﬂuid              (air)                temperature                                      types                                               of ﬂuid                                                 temperature                                                                       will      ̃𝜎̃𝑇𝑠= √                          𝑇𝐹. Two                                          𝑁                                                                                          𝑘=1
+
+                                                                        3
+
+PAGE 4
+C. Caliot, L. d’Alençon, S. Blanco et al.                                                                                       International Journal of Heat and Mass Transfer 222 (2024) 125139
+
+
+
+
+
+Fig. 1. Schematic representation of conductive, thermal and solar radiative sub-paths: (a) Sub-path realizations for direct and diﬀuse solar irradiations, absorbed at
+⃗𝑦𝑖, are drawn. A path starting at ⃗𝑦𝑖is chosen randomly among conductive, convective and radiative heat transfer modes (Eq. (10)). A ﬂoating WOS is depicted. When
+crossing the interface between solid 1 and 2, a position in the solid 2 is randomly chosen and the path terminates at an indoor RBC where the room air temperature
+is retained (𝑇𝐹,𝑖); (b) The sky (𝑠𝑘𝑦) and the urban geometry (𝑆,𝐹) form an enclosure ﬁlled with a transparent medium where radiation is multiply reﬂected. The
+Sun’s surface (𝑑), Lambertian and specular reﬂecting materials are also represented. A realization of ̇𝑞𝑜,𝑑(⃗𝑦0) is drawn with a realization of ̇𝑞𝑜,𝑟(⃗𝑦0) that includes a
+shadowed direct contribution at ⃗𝑦1, a specular reﬂection at ⃗𝑦2 and a path ending in the sky.
+
+                                                                                                            𝑘𝑠(⃗𝑦𝑖,𝑡)                                                                                                                                ℎ𝐹(⃗𝑦𝑖,𝑡)                                                                                                                                                             ℎ𝑅(⃗𝑦𝑖,𝑡)
+                                                                                                                                                                                                                                                       ,The approach adopted by Tregan et al. [19] and Penazzi et al. [23] leads      𝑃𝐶(⃗𝑦𝑖,𝑡) =                                                                                                                   𝑃𝐹(⃗𝑦𝑖,𝑡) =                                                                                                                                                                                                              ,     𝑃𝑅(⃗𝑦𝑖,𝑡) =to follow mixed random walks including conductive and radiative sub-                 𝛿𝑏ℎ𝑇(⃗𝑦𝑖,𝑡),                  ℎ𝑇(⃗𝑦𝑖,𝑡)                   ℎ𝑇(⃗𝑦𝑖,𝑡)
+paths until a known temperature is reached and accounting for known
+surface or volume ﬂux densities along the paths. Indeed, conductive                  𝑘𝑠(⃗𝑦,𝑡)                                                                                    ℎ𝑇(⃗𝑦,𝑡) =     + ℎ𝐹(⃗𝑦,𝑡) + ℎ𝑅(⃗𝑦,𝑡).
+sub-paths were followed with a 𝛿-sphere technique and the radiative                  𝛿𝑏
+sub-paths were tracked with standard ray-tracing. An important step of    The last term of Eq. (10) is unknown and involves the absorption of
+the approach is the probabilization of RBC, Eq. (1e), that makes possible     solar radiation by the solid surface. For a known local ﬂux density on
+the connection of sub-paths:                                                                                solid surfaces, Penazzi et al. [23] accounted for it by increasing the
+𝑇𝑠(⃗𝑦,𝑡) =𝑃𝐶𝑇𝑠(⃗𝑦−𝛿𝑏⃗𝑛,𝑡) + 𝑃𝐹𝑇𝐹(⃗𝑦,𝑡)                     MCM weight with its values, each time the interface is visited by the
+                                                           random walk. In this study, we use DRT to account for the unknown
+                                  ̇𝑞𝑜(⃗𝑦,𝑡)           ⃗𝑦∈𝜕𝑆,𝐹, 𝑡> 𝜏𝐼,    (10)
+      + 𝑃𝑅𝜃𝑅(⃗𝑦,𝑡) +             ,                                             solar ﬂux absorption at RBC surfaces. Thus, each time a RBC is visited
+                       ℎ𝑇                                                                                                                                                                     ̇𝑞𝑜(⃗𝑦,𝑡)
+                                                              by the random walk, only one realization of          is accounted for and
+where 𝛿𝑏is the reinjection length ([19,23]), 𝑃𝐶, 𝑃𝐹and 𝑃𝑅are prob-                                           ℎ𝑇
+abilities associated respectively to the contribution of conduction, con-     increases the MCM weight by a quantity 𝑊𝑜,𝑘. Thus, the MCM weight
+vection and radiation:                                      may be formulated as:
+
+                                                                        4
+
+PAGE 5
+C. Caliot, L. d’Alençon, S. Blanco et al.                                                                                       International Journal of Heat and Mass Transfer 222 (2024) 125139
+
+
+
+
+
+Fig. 2. Flowchart of the backward MCM algorithm used to compute one realization of a MCM temperature estimate in an urban geometry. Three starting locations
+are given in blue rounded squares: inside the solid, or inside the ﬂuid (camera), or at an interface. Four temperatures at path ends are given in red rounded
+squares: initial, sky, ﬂuid or Dirichlet’s boundary temperatures. Green diamonds specify a condition with two outcomes (Yes/No). Orange rectangles stand for
+speciﬁc algorithms, which generate radiative or conductive paths, or identify the reached interfaces where the double randomization may occur. The red rectangle
+represents the evaluation of solar contributions. (For interpretation of the colours in the ﬁgure(s), the reader is referred to the web version of this article.)
+                   {
+𝑊𝑘(⃗𝑦0,𝑡0) = 𝐻(𝑡𝑛⩽𝜏𝐼) 𝑇𝐼+ 𝐻(𝑡𝑛> 𝜏𝐼)  𝐻(⃗𝑦𝑛∈𝜕𝑆,𝐷) 𝑇𝐷(⃗𝑦𝑛,𝑡𝑛) +       2.1. Absorbed solar irradiation
+                            }
+                                                                The integral formulation of ̇𝑞𝑜is best solved with a MCM algo-  𝐻(⃗𝑦𝑛∈𝜕𝑆,𝐹) 𝑇𝐹(⃗𝑦𝑛,𝑡𝑛) + 𝐻(⃗𝑦𝑛∈𝜕𝑠𝑘𝑦) 𝑇𝑠𝑘𝑦(⃗𝑦𝑛, ⃗𝜔𝑛,𝑡𝑛)  + 𝑊𝑜,𝑘,
+                                                                     rithm [13] that accounts for multiple reﬂections as well as spectral and
+                                                               (11)     directional optical properties [29,30]. In the presence of Lambertian
+                                                                               surfaces, an improvement of the MCM algorithm convergence may be
+with 𝑛the index at path end after 𝑛jumps of the random walk (con-                                                                    reached by adopting a splitting of the solar radiative intensity:
+ductive and radiative), and 𝐻(⋅) is a test function. Its value is unity if
+the condition is fulﬁlled and zero otherwise. In Eq. (11), the ﬁrst test is     𝐼𝑜(⃗𝑦0,−⃗𝜔0,𝜆) = 𝐼𝑜,𝑑(⃗𝑦0,−⃗𝜔0,𝜆) + 𝐼𝑜,𝑟(⃗𝑦0,−⃗𝜔0,𝜆),                 (12)
+used to manage the initial condition. Indeed, at the end of the 𝑘th path,
+a known temperature has been reached. If the conductive path, that    with 𝐼𝑜,𝑑the radiative intensity coming directly from the Sun without
+goes back in time, reaches 𝜏𝐼, the ﬁrst test function is unity, and zero    any change of direction and 𝐼𝑜,𝑟the radiative intensity of the solar ra-
+otherwise. If the initial time is not reached, then additional tests are in-     diation being scattered or reﬂected at least once. The solar irradiation
+volved in Eq. (11) to identify where the path ends: at a solid boundary    absorbed is then split into two components, direct ( ̇𝑞𝑜,𝑑) and diﬀuse
+(Eq. (1c)), in the ﬂuid or in the sky.                                                ( ̇𝑞𝑜,𝑟):
+   The full algorithm ﬂowchart associated with each MCM realization
+is depicted in Fig. 2 and includes possible starting points (inside the       ̇𝑞𝑜,𝑑(⃗𝑦0,𝑡) = ∫𝑑𝜆∫  𝑑Ω(⃗𝜔𝑑)  ||⃗𝜔𝑑⋅⃗𝑛0|| 𝜀(⃗𝑦0,𝜆)
+solid, at an interface, or from a camera), the conditional steps with                                                                                  ΔΩ𝑑
+the recorded solar ﬂux densities along the conduction-radiation ran-
+                                                         × 𝐻(⃗𝑦𝑑∈𝜕𝑑) 𝐼𝑜,𝑑(⃗𝑦0,−⃗𝜔𝑑,𝜆),                      (13)
+dom path and the temperatures at path ends. At an interface having a
+RBC              the MCM                       algorithm                                      will                                  sample                                          a realization                                                               of                                                             the     (𝜕𝑆,𝐹),                                                                            in-       ̇𝑞𝑜,𝑟(⃗𝑦0,𝑡) = ∫𝑑𝜆∫ 𝑑Ω(⃗𝜔0)  ||⃗𝜔0 ⋅⃗𝑛0|| 𝜀(⃗𝑦0,𝜆)terface       temperature                    (Eq.                         (10)) based                              on                                       the probabilities,                                                                                i.e.,                                                       𝑇𝐶,                                                          𝑇𝐹,
+or 𝜃𝑅. This sampling is done by comparing the probabilities 𝑃𝐶, 𝑃𝐹           (  2𝜋
+and 𝑃𝑅to a random number 𝑅, uniformly distributed between 0 and 1,           ×  𝐻(⃗𝑦1 ∈𝜕𝑠𝑘𝑦) 𝐼𝑜,𝑠𝑘𝑦(⃗𝑦1,−⃗𝜔0,𝜆)
+and generated by the pseudo-random number generator ThreeFry [26].                            )
+If 𝑇𝐹is sampled, the MCM algorithm stops because the ﬂuid tempera-          + 𝐻(⃗𝑦1 ∈𝜕𝑆,𝐹) 𝐼𝑜,𝑟(⃗𝑦1,−⃗𝜔0,𝜆)   ,                   (14)
+ture is assumed known. In the other cases, DRT allows us to evaluate
+the unknown temperature by starting a conductive or radiative path. If    where ΔΩ𝑑is the Sun’s solid angle and with the following recursive
+𝑇𝑠(⃗𝑦𝑖−𝛿𝑏⃗𝑛𝑖, 𝑡) is sampled, a conductive sub-path is started at ⃗𝑦𝑖−𝛿𝑏⃗𝑛𝑖     expression of the diﬀuse solar intensity,
+(see Fig. 1a). In the developed model, the ﬂoating random walk-on-
+sphere (WOS) technique is used for the conductive random walk with      𝐼𝑜,𝑟(⃗𝑦𝑖+1,−⃗𝜔𝑖,𝜆) =                                                                          𝑑Ω(⃗𝜔𝑖+1)  ||⃗𝜔𝑖+1 ⋅⃗𝑛𝑖+1|| 𝜌′′(⃗𝑦𝑖+1,−⃗𝜔𝑖| −⃗𝜔𝑖+1,𝜆)                                                                    ∫
+an absorbing thickness parameter 𝜖𝑏[27,28]. Alternatively, if 𝜃𝑅(⃗𝑦𝑖, 𝑡)                         2𝜋
+is required, the random walk is followed with a multiple reﬂection path
+                                                              × 𝐼𝑜(⃗𝑦𝑖+1,−⃗𝜔𝑖+1).                             (15)(ray-tracing) in the urban geometry. As previously stated, the absorbed
+solar ﬂux is evaluated with DRT leading to start a sub-path for ̇𝑞𝑜,𝑑and     Fig. 1b shows, at point ⃗𝑦0, a direct contribution from the Sun (𝜕𝑑) in
+another one for ̇𝑞𝑜,𝑟. Fig. 1a presents the paths belonging to diﬀerent     direction ⃗𝜔𝑑inside the Sun’s solid angle ΔΩ𝑑. The expression of  ̇𝑞𝑜,𝑟
+heat transfer modes and starting at a wall boundary with a RBC. The     includes the solar radiation resulting from multiple scatterings in the
+next paragraphs present the integral formulation for the solar ﬂuxes    atmosphere and from multiple reﬂections by the urban opaque surfaces
+leading to the expression of 𝑊𝑜,𝑘.                                           (see Fig. 1b).
+
+                                                                        5
+
+PAGE 6
+C. Caliot, L. d’Alençon, S. Blanco et al.                                                                                       International Journal of Heat and Mass Transfer 222 (2024) 125139
+
+2.2. Absorbed direct solar irradiation                                 and directional PDFs:
+
+   The direct normal irradiation, 𝐷𝑜, is the direct solar radiative ﬂux     𝑝𝜌(⃗𝑦𝑖+1,−⃗𝜔𝑖,−⃗𝜔𝑖+1,𝜆) = 𝑓𝜌(⃗𝑦𝑖+1,−⃗𝜔𝑖| −⃗𝜔𝑖+1,𝜆) |⃗𝜔𝑖+1 ⋅⃗𝑛𝑖+1|,
+density incident on a surface oriented perpendicularly to the Sun’s cen-                    |⃗𝜔0 ⋅⃗𝑛0|
+tre direction (⃗𝑛≡⃗𝜔𝑆𝑢𝑛):                                             𝑝Ω(⃗𝜔0) =   𝜋      .
+                                                             The diﬀuse solar intensity (Eq. (15)) includes a recursivity through 𝐼𝑜,𝑟,
+𝐷𝑜(⃗𝑦) = ∫𝑑𝜆∫  𝑑Ω(⃗𝜔𝑑)  ||⃗𝜔𝑑⋅⃗𝑛|| 𝐼𝑜,𝑑(⃗𝑦,−⃗𝜔𝑑,𝜆).                      which highlights the reversed multiple reﬂection path. The other terms
+            ΔΩ𝑑                                                         represent the sources of diﬀuse solar radiation that occur at each re-
+The Sun’s solid angle being small, 𝐼𝑜,𝑑is assumed constant in ΔΩ𝑑.     ﬂection and at the end of the sub-path. 𝑊𝐿𝑜,𝑟,𝑑stands for the additive
+Thus, an integral formulation of ̇𝑞𝑜,𝑑, that can be solved with a reverse     contribution of direct solar radiation reﬂection on Lambertian surfaces
+MCM algorithm, may be given by:                                      along the diﬀuse solar radiative sub-path. At path end, 𝑊𝑜,𝑠𝑘𝑦repre-
+                                                                             sents the diﬀuse sky solar radiation. When the last reﬂection occurs on
+̇𝑞𝑜,𝑑(⃗𝑦0,𝑡) = ∫𝑝𝑁𝑜(𝜆)𝑑𝜆∫  𝑝Ω𝑑(⃗𝜔𝑑)𝑑Ω(⃗𝜔𝑑) 𝑊𝑜,𝑑(⃗𝑦0),            (16)    a specular surface and the ray ends in ΔΩ𝑑, the term 𝑊𝐹𝑜,𝑟,𝑑represents
+                                                                        the Sun’s specular reﬂection. It is worth mentioning that the numerical
+                     ΔΩ𝑑
+                                                                       value of 𝑊𝐹𝑜,𝑟,𝑑(Eq. (22)) may be several orders of magnitude higher
+ 𝑊𝑜,𝑑(⃗𝑦0) = 𝐻(⃗𝑦𝑑∈𝜕𝑑) 𝜀(⃗𝑦0)  ||⃗𝜔𝑑⋅⃗𝑛0|| 𝐷𝑜(⃗𝑦0).                   (17)     than the other quantities (i.e., Eqs. (17), (21) and (20)). This can lead
+The MCM weight 𝑊𝑜,𝑑(Eq. (17)) includes a test that determines the     to convergence issues of the MCM algorithm in the presence of specular
+shadowing from direct solar radiation. Equation (16) is formulated with     reﬂections of direct solar irradiation ([30]).
+probability density functions (PDF) that are used for the spectral and
+directional samplings:                                                         2.4. Monte Carlo weight for the absorbed solar irradiation
+
+           1                   𝜀(⃗𝑦0,𝜆)                        𝐼𝑜,𝑑(⃗𝑦0,𝜆)        The previous paragraphs have detailed the integral formulations for
+                                                                                                                    .𝑝Ω𝑑(⃗𝜔𝑑) =                           ,    𝑝𝑁𝑜(𝜆) =                                       𝑝Λ𝑜(𝜆),     𝑝Λ𝑜(𝜆) =                                                                        the direct and diﬀuse solar irradiations that can be computed with a re-       ΔΩ𝑑                                       𝜀(⃗𝑦0)                                                                         𝐼𝑜,𝑑(⃗𝑦0)
+                                                                         verse MCM ray-tracing algorithm. The expression of 𝑊𝑜,𝑘(Eq. (11)) that
+2.3. Absorbed diﬀuse solar irradiation                                                  is used to estimate the absorbed solar irradiations along the conductive-
+                                                                             radiative random walk, can now be obtained:
+
+   The diﬀuse solar irradiation includes the multiple reﬂections of the                            ∑𝑛𝑜 {      ( ∑𝑛𝑟,𝑗               )                                                                       1
+direct Sun’s radiation and the sky solar radiation (see Fig. 1b). The mul-    𝑊𝑜,𝑘=           𝑊𝑜,𝑑(⃗𝑦𝑗) +     𝐻(⃗𝑦𝑚∈𝜕𝐿𝑆,𝐹) 𝑊𝐿𝑜,𝑟,𝑑(⃗𝑦𝑚)  +
+tiple scattered solar radiation in the atmosphere is assumed known and           ℎ𝑇 𝑗=1              𝑚=1                                (23)                                                                }
+given by a solar sky model (e.g., the all-weather sky model from Perez
+et al. [31]) deﬁning spectral and directional solar intensities 𝐼𝑜,𝑠𝑘𝑦com-                                         𝑊𝑜,𝑠𝑘𝑦(⃗𝑦𝑛𝑟,𝑗+1) + 𝑊𝐹𝑜,𝑟,𝑑(⃗𝑦𝑛𝑟,𝑗+1)    .
+ing from the sky (𝜕𝑠𝑘𝑦). To simplify the formulation, the sky diﬀuse
+solar radiative intensity is assumed to have the same spectral behaviour    𝑛𝑜is the number of RBC reached where a realization of the absorbed
+                                                                               solar irradiation should be computed. 𝑛𝑟,𝑗is the number of reﬂectionsas the solar direct radiative intensity. This leads to separate its spec-
+tral and directional dependency: 𝐼𝑜,𝑠𝑘𝑦(⃗𝜔, 𝜆) ≡𝑓𝑠𝑘𝑦(⃗𝜔) 𝐼𝑜,𝑑(𝜆). Then,     along a diﬀuse solar radiation sub-path. Thus, the MCM algorithm for
+                                                                        the 𝑘th realization consists in recording the 𝑛𝑜direct and diﬀuse solarEq. (14) may be reformulated,
+                        (                                contributions. The diﬀuse contribution is obtained by adding 𝑛𝑟,𝑗po-
+                                                                                   tential reﬂections of the direct solar radiation, and if the sub-path ends
+̇𝑞𝑜,𝑟(⃗𝑦0,𝑡) = ∫𝑝𝑁𝑜(𝜆)𝑑𝜆∫ 𝑝Ω(⃗𝜔0)𝑑Ω(⃗𝜔0)  𝑊𝑜,𝑠𝑘𝑦+                        either in the sky or as a specular reﬂection of the Sun, their contribu-
+                         2𝜋
+                             )            (18)     tions are added.
+                                                                  As for the computation time, it is determined by the number of
+                    𝐻(⃗𝑦1 ∈𝜕𝑆,𝐹) 𝑊𝑜,𝑟(⃗𝑦1,−⃗𝜔0,𝜆)
+                                                                                 realizations, which can be large for image generation. However, the in-
+                                                                dependence between MCM realizations allows eﬃcient parallelizationExpressing the BRDF with Eq. (6) and using the solar intensity splitting
+                                                                              of the algorithm. The observed computation time of the MCM algorithm(Eq. (12)) for Lambertian surfaces only, the recursive term accounting
+                                                             (programmed with the star-engine libraries [32]) is between 100 andfor the multiple reﬂections of solar radiation (Eq. (15)) may be refor-
+                                                                1000 microseconds per realization on a single thread of a CPU (Intel®mulated as:
+                                                              Core™ i9-9900 K CPU @ 3.60 GHz × 16). This time depends on the type                   [
+𝑊𝑜,𝑟(⃗𝑦𝑖+1,−⃗𝜔𝑖,𝜆) = 𝑃𝜌  𝐻(⃗𝑦𝑖+1 ∈𝜕𝐿𝑆,𝐹) ∫  𝑝Ω𝑑𝑑Ω(⃗𝜔𝑑) 𝑊𝐿𝑜,𝑟,𝑑(⃗𝑦𝑖+1) +    anddependsthe numberon the distanceof sub-paths(in spacecomputedor time)duringbetweeneachtherealization.probe pointIt alsoand
+                                    ΔΩ𝑑                              the boundary conditions or the initial condition where the paths end.
+                      (
+                                                                            After the HTM model presentation and the description of the probability
+                     𝑝𝜌𝑑Ω(⃗𝜔𝑖+1)   𝑊𝑜,𝑠𝑘𝑦(⃗𝑦𝑖+1) + 𝑊𝐹𝑜,𝑟,𝑑(⃗𝑦𝑖+1) +    method and MCM algorithms, the next sections are devoted to numeri-                  ∫
+                          2𝜋                                                    cal validation of the developed model and its implementation for a heat                                      ) ]
+                                                          wave scenario in a complex urban geometry.
+                 + 𝐻(⃗𝑦𝑖+2 ∈𝜕𝑆,𝐹) 𝑊𝑜,𝑟(⃗𝑦𝑖+2,−⃗𝜔𝑖+1,𝜆)      ,
+
+                                                                           3. Numerical validation                                                               (19)
+
+with the following quantities corresponding to the contributions of the       The conductive and radiative parts of the probabilistic model will
+diﬀuse solar radiation from the sky (Eq. (20)) and from the reﬂection    be numerically validated in this section. Conduction is solved with
+of direct solar radiation on Lambertian (Eq. (21)) or specular surfaces     the backward MCM algorithm in three cases of increasing geometrical
+(Eq. (22)):                                                              complexity: 1) Case 1 considers a one-dimensional slab with a single ho-
+                                                             mogeneous layer; 2) Case 2 considers a one-dimensional slab with two
+𝑊𝑜,𝑠𝑘𝑦(⃗𝑦𝑖) = 𝜀(⃗𝑦0) 𝜋𝐻(⃗𝑦𝑖+1 ∈𝜕𝑠𝑘𝑦) 𝑓𝑠𝑘𝑦(−⃗𝜔𝑖)𝐼𝑜,𝑑(⃗𝑦𝑖),            (20)    homogeneous layers in thermal contact; 3) Case 3 considers a three-
+𝑊𝐿𝑜,𝑟,𝑑(⃗𝑦𝑖) = 𝜀(⃗𝑦0) 𝐻(⃗𝑦𝑑∈𝜕𝑑)  ||⃗𝜔𝑑⋅⃗𝑛𝑖|| 𝐷𝑜(⃗𝑦𝑖),                  (21)     dimensional thermal-bridge imitating a thermal bridge at a building                                                                        edge. In all cases, the physical properties of each material are assumed
+𝑊𝐹𝑜,𝑟,𝑑(⃗𝑦𝑖) = 𝜀(⃗𝑦0) 𝜋𝐻(⃗𝑦𝑖∈𝜕𝐹𝑆,𝐹) 𝐻(⃗𝑦𝑖+1 ∈𝜕𝑑) 𝐼𝑜,𝑑(⃗𝑦𝑖),        (22)     constant, homogeneous and isotropic.
+
+                                                                        6
+
+PAGE 7
+C. Caliot, L. d’Alençon, S. Blanco et al.                                                                                       International Journal of Heat and Mass Transfer 222 (2024) 125139
+
+
+                            Table 1
+                           Thermal properties of materials with their thickness (𝑑) and their reﬂectivity (solar and thermal)
+                               or their refractive index (with real and imaginary parts) used in the numerical validation cases
+                                 (1-3) and for the heat wave scenario.
+
+                                     Material      𝜆𝑠                  𝜌𝑠               𝐶𝑝,𝑠            𝑑           𝑃𝜌𝑜            𝑃𝜌𝑅
+                                    (W m−1 K−1)       (kg m−3)       (J kg−1 K−1)      (m)        or (𝑛, 𝑘)       or (𝑛, 𝑘)
+
+                                     concrete      1.8              2400         1000              0.4         0.8            0.2
+                               EPS          0.035            20           1300        −      −        −
+                                 ground      1               1300         1900           10         0.5            0.2
+                                         glass        1               2500         900              0.005       (1.52, 0)        (1.7, 0.636)
+                                body      −           −        −          −        0            0
+                                        tree       −           −        −          −          0.2          0
+
+
+
+                               Table 2
+                                Temperatures and numerical parameters for the four validation cases and the heat wave
+                                     scenario.
+
+                                                𝑇𝐼          𝑇𝐹,𝑖        𝑇𝐹,𝑒      ℎ𝐹          Δ𝑥      Δ𝑡   𝑁      𝛿𝑏         𝜖𝑏
+                                                 (K)       (K)       (K)     (W m−2 K−1)    (mm)     (s)       (-)    (mm)   (mm)
+
+                                   Case 1    293.15    273.15    273.15    10             1         0.72    105   Δ𝑥      𝛿𝑏∕4
+                                   Case 2    283.15    273.15    293.15    10             1         0.72    105   Δ𝑥      𝛿𝑏∕4
+                                   Case 3    293.15    293.15    313.15    10             10       2       105   Δ𝑥∕7    𝛿𝑏∕4
+
+
+                                                                 𝑇(K)     𝑃𝜌      (𝑛, 𝑘)
+
+                                                                ground     283.15    0.5   −
+                                                                          walls       283.15    0.5   −
+                                                         Case 4
+                                                            windows    283.15   −      (1.7,0.636)
+                                                                     sky         273.15    0    −
+
+
+                                                   𝑇𝐼          𝑇𝑟          𝑇𝐹,𝑖             𝑇𝑔             𝑇𝑏         𝑇𝐹,𝑒         𝑇𝑠𝑘𝑦
+
+                                       heat       305.211    298.15    298.15          283.15        300.15    Eq. (25)   𝑇𝐹,𝑒−20
+
+                                wave       𝑆𝑖        𝑆𝑏       ℎ𝐹              𝜃𝑑       𝑁         𝛿𝑏           𝜖𝑏
+                                         scenario    (m2)      (m2)    (W m−2 K−1)    (rd)              (-)      (mm)     (mm)
+
+                                              33168      1.77      10              4.65 × 10−3    105      2           0.5
+
+
+
+   To validate numerically the model, materials close to the urban       Temperature proﬁles of Figs. 3a and 3b with their scaled diﬀer-
+context are chosen. Concrete represents the building structure and the     ences, Figs. 3c and 3d, show very good agreement between the FDM
+expanded polystyrene (EPS) is chosen as a representative material for    and MCM results for all locations and times considered. The FDM re-
+thermal insulation (Table 1). In addition, the solar and thermal radia-      sults are within the MCM conﬁdence interval of ± 3 ̃𝜎̃𝑇𝑠(corresponding
+tion heat transfers are not accounted for in these ﬁrst three cases. To     to a conﬁdence interval of 99.73%). As expected, EPS is cooling faster
+quantify the accuracy of MCM, deterministic methods are used to com-     than the concrete due to its lower thermal inertia (see Table 1).
+pute temperatures (𝑇𝑠,𝑟𝑒𝑓) that are considered as reference results. For        In Case 2, a slab with two layers is considered: The ﬁrst layer is con-
+this purpose, the ﬁnite diﬀerence method (FDM) is used to compute     stituted of EPS with thickness 0.1 m, and the second layer is constituted
+the reference results in the one-dimensional cases 1, 2 and 3, while the     of concrete with thickness 0.2 m. At 𝜏𝐼, both layers are at 𝑇𝐼(see Ta-
+ﬁnite volume method is used in the three-dimensional case 4. Thus, a     ble 2) and then they are considered to exchange heat with two ﬂuids
+scaled diﬀerence, Δ𝐸𝑀𝐶(%), between the temperatures computed with     at diﬀerent temperatures: 𝑇𝐹(𝑥 = 0) = 𝑇𝐹,𝑖and 𝑇𝐹(𝑥 = 𝐿) = 𝑇𝐹,𝑒(with
+the deterministic methods and MCM are deﬁned:                   𝐿the overall thickness of the slab, i.e., 0.3 m). Both sides have identi-
+                𝑇𝑠,𝑟𝑒𝑓−̃𝑇𝑠                                                    cal convective heat transfer coeﬃcients. The thermal problem of Case
+Δ𝐸𝑀𝐶𝑀= 100                     ,                                     (24)    2 includes Eqs. (1a), (1b), (1e) and (1d). Resulting temperature proﬁles
+             𝑇𝑚𝑎𝑥−𝑇𝑚𝑖𝑛                                                  inside the two-layer slab are shown at four diﬀerent times in Figs. 3e-3f
+where the scaling of the temperature diﬀerence is made with the maxi-    and the simulation parameters for the FDM and MCM simulations are
+mum temperature diﬀerence occurring in the thermal problem (𝑇𝑚𝑎𝑥is     gathered in Table 2. Figs. 3e-3f show very good agreement between the
+the maximum temperature and 𝑇𝑚𝑖𝑛is the minimum temperature).      FDM and MCM results. In addition, the FDM results are within the MCM
+   In Case 1, the thermal quenching of the slab is studied numeri-    conﬁdence interval. Soon after the initial time, EPS exhibits the largest
+cally by confronting the reference results of FDM and the presented     temperature diﬀerence due to its low conductivity and low thermal in-
+backward MCM algorithm based on the probabilized heat transfer      ertia. Concrete is heating up slowly but more uniformly than EPS due
+model. The transient thermal problem of Case 1 includes Eqs. (1a),     to its higher thermal inertia and conductivity. The thermal problem of
+(1b) and (1e). Table 2 gathers the initial, boundary and simulation    Case 3 is identical to case 2 but its geometry and temperature ﬁeld are
+parameters. Both slab boundaries have the same ﬂuid temperature:    more complex. Geometry of Case 3 is depicted in Fig. 4 with two views,
+𝑇𝐹(𝑥 = 0) = 𝑇𝐹,𝑖= 𝑇𝐹(𝑥 = 𝐿) = 𝑇𝐹,𝑒(with 𝐿the thickness of the slab).     along +𝑌and −𝑍axis, showing the location of concrete and EPS in a
+The temperature proﬁles at several times are plotted for a concrete slab     typical building thermal bridge conﬁguration. Considering the symme-
+of thickness 0.2 m in Fig. 3a and for an EPS slab of thickness 0.1 m in     try of this domain, Case 3 represents stacked cubic rooms with an edge
+Fig. 3b. A uniform discretization of space and time was adopted in the     of 2.4 m where the ﬂoors and the lateral envelope are in concrete (0.2
+FDM computation with a spatial step Δ𝑥and a time step Δ𝑡given in   m thickness). In each room, an internal insulation is considered with a
+Table 2. The number of MCM realizations 𝑁with the boundary reinjec-     vertical EPS layer of 0.1 m thickness. The thermal simulation consists in
+tion length 𝛿𝑏and the absorbing thickness 𝜖𝑏are also given in Table 2.     heating the solids by convection from the external concrete envelope,
+
+                                                                        7
+
+PAGE 8
+C. Caliot, L. d’Alençon, S. Blanco et al.                                                                                       International Journal of Heat and Mass Transfer 222 (2024) 125139
+
+
+
+
+
+Fig. 3. Comparison of temperature proﬁles at several times (with units 𝑠) for single-layer slabs of Case 1 (a)-(d) and the two-layer slab of Case 2 (e)-(f) obtained with
+the deterministic FDM (lines) and the probabilistic MCM (markers). The scaled numerical error (Eq. (24)) and the MCM conﬁdence intervals (3 ̃𝜎̃𝑇𝑠) are also given.
+
+
+while the room internal ﬂuid is set at the initial temperature. To pro-    OpenFoam (e.g., Fig. 4c) whereas the MCM was used to compute solid
+duce the reference solution, a ﬁnite-volume method (FVM) was chosen.     temperatures at three locations and several times: Two computation
+The application chtMultiRegionFoam of OpenFoam v9 was used to solve     points are located inside the solids in the thermal bridge corner, one in
+Case 3 with a preconditioned bi-conjugate gradient solver and a Gauss    EPS with coordinates [0.35; 0.35; 0.15] and one in concrete with coor-
+linear corrected scheme (second order) for the Laplacian discretization.     dinates [0.5; 0.5; 0.05]; A third point is located on the external concrete
+   The unstructured three-dimensional hexahedra mesh was generated     wall with coordinates [0.6; 0.5; 0.05]. The lower transient temperatures
+with the snappyHexMesh utility from triangulated surface geometry.     are computed at the point inside the insulation, while the higher tran-
+A characteristic spatial step of the mesh is given in Table 2 but a re-     sient temperatures in Fig. 5a are computed for the point on the external
+ﬁned zone was set to halve this characteristic step that is deﬁned as     wall. The plot of the scaled diﬀerences between FVM and MCM in
+a box with two points: [0.2; 0.2; 0] and [0.6; 0.6; 0.3]. This reﬁned zone     Fig. 5b highlights a weak trend associated to the temperatures com-
+is best seen in Fig. 4c where the temperature ﬁeld is drawn in plane    puted by MCM to be slightly higher than the one computed by FVM.
+𝑋= 0.25 at time 𝑡 = 8 × 104 in the thermal bridge zone. The exterior    The values of Δ𝐸𝑀𝐶𝑀being lower than 1.5% of the observed discrep-
+ﬂuid temperature being higher than the interior one, heat is conducted     ancies may be considered acceptable and potentially attributed to the
+preferentially in the concrete ﬂoor. A numerical comparison is plotted     numerical diﬀusion associated to FVM and/or the numerical implemen-
+in Fig. 5a where the whole transient temperature ﬁeld is computed with     tation of WOS with the parameters 𝛿𝑏and 𝜖𝑏.
+
+                                                                        8
+
+PAGE 9
+C. Caliot, L. d’Alençon, S. Blanco et al.                                                                                       International Journal of Heat and Mass Transfer 222 (2024) 125139
+
+
+
+
+
+Fig. 4. Geometry and computation results for Case 3: (a) View of the geometry and its mesh in the +𝑌axis direction, while in (b) the view is in the −𝑍direction.
+The geometry is composed of internal insulation (EPS, in black) and a structure (concrete, in blue) representing a thermal bridge in a building. The internal surfaces
+are the boundaries at 𝑍= 0.1 m, 𝑋= 0.3 m, and 𝑌= 0.3 m. The external surfaces are at 𝑋= 0.6 m, and 𝑌= 0.6 m, while the symmetry boundaries are at 𝑋= −0.6
+m, 𝑌= −0.6 m, 𝑍= 0 and 1.2 m. (c) The temperature ﬁeld, in the plane 𝑋= 0.25, computed at 𝑡 = 8 ×104 s with OpenFoam is given. The external vertical boundary
+is located on the right while the internal vertical boundary is located on the left. The mesh is superimposed showing the reﬁned zone inside the thermal bridge
+corner.
+
+
+   The three cases have demonstrated the ability of the proposed prob-     the ground are due to its low emissivity and the low temperature of the
+abilistic model and algorithm to solve conductive heat transfer with     sky. Between the buildings, pixel radiance temperatures present high
+probabilized RBC in complex geometry. Thus, the accuracy of the ra-     values due to the multiple reﬂections. In addition, specular surfaces
+diative part of the proposed model will be studied numerically in the     present high radiance temperatures because their normal emissivity is
+following Case 4. This will be done through a comparison with reference     high. The proposed model gives similar results which are not shown for
+results obtained by a MCM model validated in [30] and implemented     the sake of conciseness. Instead, the pixel-based scaled diﬀerences are
+in the HTRDR-Urban code [33]. A urban scene is selected for the val-     plotted in Fig. 5e. Absolute values of Δ𝐸𝑀𝐶𝑀are lower than 3%, and
+idation and the objective is to compare the (instantaneous) infrared     their repartition in the image (Fig. 5e) highlights its origin comes from
+thermal renderings that involve only the radiative exchanges because     the statistical noise associated with each MCM computation (HTRDR-
+all the temperatures are set. A CIE tristimulus [34] rendering of the ur-    Urban and the present model). In this section, the random walks used
+ban geometry is shown in Fig. 5c. The geometry includes a ﬂat ground     to solve radiative and conductive heat transfers along with the probabi-
+and two parallel rows, separated by 15 m, of ﬁve buildings with 5 m     lization at the interfaces (Robin’s and solid-solid boundary conditions)
+spacings. The building heights are set to 16.7 m (5 ﬂoors), their lengths    were validated. In the next section, the proposed model is applied to a
+to 11.5 m and their widths to 7 m. All surfaces are assumed opaque.    complex urban geometry for heat wave meteorological conditions.
+The ground and the building walls are Lambertian, but the windows are
+specular. Their temperatures and gray optical properties are gathered in
+                                                                           4. Results for a heat wave conditions
+Table 2. The 300x300 pixels image of the infrared rendering computed
+by HTRDR-Urban is plotted in Fig. 5d. The temperature of each pixel
+is a radiance temperature (or equivalent black body temperature) with       The ability of the probabilistic model to solve for coupled conduc-
+𝑁= 103 sample per pixel. Its value takes into account the multiple re-     tion and radiation (linearized thermal and solar) in complex geometry
+ﬂections driven by the surface optical properties (Table 2) that are all at     will be used to obtain key quantities needed to study urban environ-
+the same temperature, except the sky. The low radiance temperatures of     ments.
+
+                                                                        9
+
+PAGE 10
+C. Caliot, L. d’Alençon, S. Blanco et al.                                                                                       International Journal of Heat and Mass Transfer 222 (2024) 125139
+
+
+
+
+
+Fig. 5. Numerical validation results of cases 3 and 4: Comparison of transient temperatures (a) for the thermal bridge Case 3 for three locations: Point [0.35; 0.35; 0.15]
+is located in the lower part of the insulation (EPS) corner; Point [0.5; 0.5; 0.05] is located inside the concrete part of the thermal bridge; Point [0.6; 0.5; 0.05] is located
+on the external (concrete) surface. Temperatures computed with OpenFoam are plotted with lines and the results of MCM are given with markers. The scaled
+numerical error (Eq. (24)) with the MCM conﬁdence intervals are given in (b); Rendering (c) in the visible spectrum (0.38-0.78 𝜇m, CIE XYZ [34]) with HTRDR-
+Urban [33,30] of the complex geometry: two parallel rows of ﬁve aligned buildings; The walls are Lambertian and the windows are specular; Solar elevation is 45◦
+and azimuth is 120◦from north (clockwise). An infrared geometry rendering is shown in (d) with reference radiance temperatures computed with HTRDR-Urban. In
+(e) the pixel-based scaled diﬀerences between the present model and the reference are given (each image has a resolution of 300x300 pixels).
+
+
+4.1. Geometry and simulation settings                                      the latitude (43.479) and longitude (−1.509) are used to compute the
+                                                                         Sun’s direction. The transient sky model for solar radiation assumes a
+   Heat wave meteorological conditions are investigated with a geom-     clear sky with an isotropic diﬀuse irradiation. 𝐻𝑜,𝑠𝑘𝑦(Fig. 6b) is the
+etry of aligned buildings (mimicking a street oriented East-West, Fig. 6)     diﬀuse solar irradiation on an horizontal surface. The direct solar radi-
+and trees. This choice is purely arbitrary and more advanced city geom-     ation (𝐷𝑜in Fig. 6b) is emitted by the Sun’s disk with half angle 𝜃𝑑.
+etry or higher frequency weather data could be considered. The aligned      Its value and MCM simulation parameters are gathered in Table 2. The
+buildings are identical to those used for the validation of the radia-     transient sky model for thermal radiation considers the sky as a black
+tive model (i.e., Figs. 5c-5d), but their number is doubled to reach two    body with uniform temperature 𝑇𝑠𝑘𝑦(see Table 2). In this scenario, at
+rows of ten aligned buildings (Fig. 6a). The concrete building walls,     the initial time, all the solids are at 𝑇𝐼. During the transient simula-
+the glass windows and the ground have homogeneous and isotropic                                                                                   tion, two Dirichlet’s boundary conditions (Eq. (1c)) are set: 𝑇𝑔, for the
+thermal properties gathered in Table 1. The buildings and a surface                                                                ground at its thickness depth; and 𝑇𝑏, the body surface (Fig. 6a) temper-
+body (Fig. 6a) were created for the scenario. The tree geometry was                                                                               ature. RBC are applied to the surfaces adjacent to external or internal
+obtained from a study conducted with DART (Discrete Anisotropic Ra-                                                                                    air such as the ground, the building walls and the window glasses. The
+diative Transfer model) in project RAMI-V (RAdiation transfer Model
+                                                          room air temperatures in each building are set identical and equal to
+Intercomparison V) [35]. Trees are aligned along the street centre, and
+                                                                                     𝑇𝐹,𝑖. Temperatures involved in the heat wave scenario simulations are
+the trunks are separated by 8.5 m. Each 12 m high tree is made of a
+                                                                      gathered in Table 2.
+trunk (4 m high) topped with a spherical foliage of 8 m in diameter,
+centred at 8 m above the ground. The foliage is made of numerous
+small triangular surfaces representing an average speciﬁc surface of     4.2. Mean radiant temperature and energy consumption
+0.021 m−1.
+   The time evolution of solar irradiations (direct and diﬀuse) is plotted
+                                                                The key quantities to compute are the mean radiant temperature
+in Fig. 6b for the ﬁve days heat wave scenario with the external air
+                                                           (MRT) and energy consumption. MRT is related to the outdoor com-
+temperatures given by the formula:
+                                                                                    fort by various indicators. It deﬁnes an equivalent temperature for the
+𝑇𝐹,𝑒(𝑡) = 308.15 + 5sin(2𝜋[𝑡−0.4]),                             (25)    environment of a body surface (𝑆𝑏), and its expression is:
+                                                                                              ] 1where the units of time 𝑡are days. Each MCM simulation is computed            [
+                                                                                                                                                          4                                                                           1
+at an observation time relatively to the initial time 𝜏𝐼= 0 (see Fig. 6b)     𝑇𝑅,𝑏(𝑡) =             𝑑𝐴(⃗𝑦0) 𝐻𝑏(⃗𝑦0,𝑡)     ,                        (26)
+which is considered to be the 21st of June 2016 at midnight. This date,           𝜎𝑆𝐵𝑆𝑏∫                                                                                                     𝑆𝑏
+
+                                                                        10
+
+PAGE 11
+C. Caliot, L. d’Alençon, S. Blanco et al.                                                                                       International Journal of Heat and Mass Transfer 222 (2024) 125139
+
+
+
+
+
+Fig. 6. Heat wave scenario geometry, ﬁve days weather data and radiative temperature mappings: (a) Representation of the building rows and of the centred body
+geometry; (b) Time evolution of the external air temperatures (𝑇𝐹,𝑒, Eq. (25)) and solar direct (𝐷𝑜) and diﬀuse (𝐻𝑜,𝑠𝑘𝑦) irradiations; Mollweide projection of 𝜃𝑅onto
+a disc computed with MCM giving the thermal environment around the body surface with (c) or without (d) trees for the heat wave scenario at 1 pm the ﬁrst day
+(corresponding to 𝑡≈0.54 days). For each pixel 𝑁= 103 leading to 𝜎̃𝑇𝑅⩽0.4 K for the buildings and 𝜎̃𝑇𝑅⩽0.8 K for the ground.
+
+
+where the body surface considered is depicted in Fig. 6a and the total     Indeed, considering an air conditioning system that maintains constant
+irradiation (from thermal and solar radiation) is given by:                 the internal air temperature (𝑇𝐹,𝑖, see Table 2), the energy consumption
+        +∞                                           may be computed by an expression similar to Eq. (2) that requires,
+
+𝐻𝑏(⃗𝑦0,𝑡) =                                                                        1        ∫ 𝑑𝜆∫ 𝑑Ω(⃗𝜔0) |⃗𝜔0 ⋅⃗𝑛0|𝐼(⃗𝑦0,𝑡,−⃗𝜔0,𝜆).                                                                                         𝑇𝑠,𝑖(𝑡) =                                                                                            𝑑𝐴(⃗𝑦0) 𝑇𝑠(⃗𝑦0,𝑡),                                  (27)
+             0     2𝜋                                              𝑆𝑖∫
+                                                                                                            𝑆𝑖
+Fig. 6 shows Mollweide projections onto a disc of the thermal envi-
+ronment around the body surface with and without the trees. This    and the convective heat transfer coeﬃcient (Table 2) which is set con-
+rendering is obtained by computing 𝜃𝑅with MCM for each pixel (image      stant. The computation of 𝑇𝑠,𝑖accounts for the solar irradiation coming
+with resolution 300x300) with 𝑁= 103, at 1 pm the ﬁrst day of the heat    through the windows. It is worth mentioning this quantity could also be
+wave scenario. This small number of realizations leads to 𝜎̃𝑇𝑅⩽0.4 K     of interest for indoor thermal comfort studies. Fig. 7b presents hourly
+for the pixels of buildings, and        K for the pixels of the ground.   MCM computations of ̃𝑇𝑠,𝑖accounting for the solar gains through the                          𝜎̃𝑇𝑅⩽0.8
+The south being in the middle of the right part of the disc, one can ob-    windows or neglecting them (as if the shades were shut). When the so-
+serve the eﬀects of solar shading on the ground temperatures caused by      lar gains are computed, some error bars are very large. This is due to
+the buildings and the trees (Fig. 6c). In addition, south facing building    some realizations of the MCM weight (Eq. (11)) that are several orders
+facades present higher radiance temperatures than north facing walls     of magnitude greater than the expected result. This could be avoided
+due to solar irradiation. It is worth recalling the computed temperatures    by increasing the number of realizations ([30]). Indeed, in this case, it
+(𝜃𝑅) are not the actual material temperatures but the radiance tempera-      is due to rare events corresponding to a reﬂection of the direct Sun’s ra-
+tures. Fig. 7a presents the time evolution of MRT averaged on the body     diation by a specular material (glass) during the computation of the
+                                                                    diﬀuse solar irradiation (Eq. (22)). Thus, it involves a MCM weightsurface, i.e. ̃𝑇𝑅,𝑏, in the street conﬁguration during the heat wave sce-
+nario and computed by MCM for each hour. The results are given with     proportional to the direct radiative solar intensity which is about ﬁve
+their error bars (± 3 𝜎̃𝑇𝑅,𝑏) corresponding to conﬁdence intervals greater     orders of magnitude greater than 𝐷𝑜. During the ﬁrst day, the build-
+                                                                           ings are cooling down because the initial temperature was set to a high
+than 99.7%. It is shown that the trees produce a reduction of the MRT
+                                                                       value (Table 2). After this period driven by the thermal inertia of themaximum values during the hottest hours, but also limit nighttime ra-
+diative cooling. Indeed, the trees lead to a lower rate of daytime ground     buildings, a periodic behaviour of ̃𝑇𝑠,𝑖may be recognized. When the
+temperature increase by blocking solar radiation, but also reduce radia-     solar gains are considered, the temporal variations of internal wall tem-
+tive cooling towards the sky at night.                                     perature are driven by the temporal variations of the solar heat gains.
+   To obtain the energy consumption in this heat wave scenario, the    Without the internal solar gains, a small periodicity is observed corre-
+air conditioning system should be simulated. But, in this demonstration    sponding to the daily weather variation smoothed and shifted by the
+study, only the average internal wall temperature (𝑇𝑠,𝑖) is computed.     building thermal inertia.
+
+                                                                        11
+
+PAGE 12
+C. Caliot, L. d’Alençon, S. Blanco et al.                                                                                       International Journal of Heat and Mass Transfer 222 (2024) 125139
+
+                                                                              diative exchange between surfaces. Application to real cities may also
+                                                                         involve sensitivity studies to parameters and the development of fast
+                                                              and accurate methods to eﬃciently couple this probabilistic heat trans-
+                                                                                    fer model with urban microclimate ﬂuid ﬂow simulations.
+
+
+                                                           CRediT authorship contribution statement
+
+
+                                                                             Cyril Caliot: Conceptualization, Data curation, Formal analysis,
+                                                                 Funding acquisition, Investigation, Methodology, Project administra-
+                                                                                   tion, Resources, Software, Supervision, Validation, Visualization, Writ-
+                                                                         ing – original draft, Writing – review & editing. Louis d’Alençon:
+                                                                         Conceptualization, Methodology, Writing – review & editing. Stéphane
+                                                                   Blanco: Conceptualization, Methodology, Writing – review & editing.
+                                                                Vincent Forest: Conceptualization, Methodology, Software, Writing –
+                                                                    review & editing. Richard Fournier: Conceptualization, Methodology,
+                                                                      Writing – review & editing. Frédéric Hourdin: Funding acquisition,
+                                                                  Methodology, Writing – review & editing. Florent Retailleau: Concep-
+                                                                                 tualization, Methodology, Writing – review & editing. Robert Schoet-
+                                                                                  ter: Conceptualization, Funding acquisition, Methodology, Writing –
+                                                                    review & editing. Najda Villefranque: Conceptualization, Methodol-
+                                                                        ogy, Writing – review & editing.
+
+
+                                                                   Declaration of competing interest
+
+
+                                                                The authors declare the following ﬁnancial interests/personal rela-
+                                                                            tionships which may be considered as potential competing interests:
+                                                                               Cyril Caliot reports ﬁnancial support was provided by French National
+                                                                    Research Agency (MC2 ANR-21-CE46-0013). Florent Retailleau reports
+                                                                      ﬁnancial support was provided by French National Research Agency
+                                                       (MC2 ANR-21-CE46-0013). Vincent Forest reports a relationship with
+                                                                     Méso-Star that includes: board membership and employment. If there
+                                                                         are other authors, they declare that they have no known competing ﬁ-
+                                                                         nancial interests or personal relationships that could have appeared to
+                                                                  inﬂuence the work reported in this paper.
+
+
+Fig. 7. Temporal evolutions obtained with MCM during the heat wave scenario:    Data availability
+(a) for the body surface MRT (Eq. (26)) when trees are considered or not (𝑁=
+105, error bars are computed with ± 3 𝜎̃𝑇𝑅,𝑏); (b) for the surface average internal       Data will be made available on request.
+wall temperature (Eq. (27)) with or without the solar gains coming through
+the window glasses, (𝑁= 105; error bars are computed with ± 3 𝜎̃𝑇𝑠,𝑖, and the    Acknowledgements
+constant room air temperature, 𝑇𝐹,𝑖, is also plotted).
+                                                                        Funding: This work was partly supported by the French National Re-
+                                                                        search Agency (MC2 ANR-21-CE46-0013) and the E2S UPPA initiatives.
+5. Conclusion and future work
+
+                                                                 References
+  A probabilistic thermal model is presented that solves with MCM
+linear and transient heat transfers by conduction and thermal radiation       [1] K.G. Burkart, M. Brauer, A.Y. Aravkin, W.W. Godwin, S.I. Hay, J. He, V.C. Ian-
+with RBC accounting for convection and absorption of solar radiation            nucci, S.L. Larson, S.S. Lim, J. Liu, C.J.L. Murray, P. Zheng, M. Zhou, J.D. Stan-
+in urban geometry. DRT is demonstrated suitable to compute unknown          away, Estimating the cause-speciﬁc relative risks of non-optimal temperature on
+direct and diﬀuse solar irradiations in complex urban geometry with            daily mortality: a two-part modelling approach applied to the global burden of dis-
+                                                                                               ease study, Lancet 398 (10301) (2021) 685–697, https://doi .org/10.1016/S0140-
+Lambertian and specular walls. Indeed, the methodology is validated for          6736(21)01700-1, publisher: Elsevier.
+conduction and radiation heat transfers separately in three-dimensional       [2] C. Li, J. Zhou, Y. Cao, J. Zhong, Y. Liu, C. Kang, Y. Tan, Interaction between ur-
+urban morphologies. In addition, the developed probabilistic method is          ban microclimate and electric air-conditioning energy consumption during high
+applied to compute the inﬂuence of trees on MRT in a street lined by           temperature season, Appl. Energy 117 (2014) 149–156, https://doi.org/10.1016/
+                                                                                                                                                         j.apenergy.2013.11.057.
+buildings for heat wave meteorological conditions. The impact of solar
+                                                                                           [3] B. Blocken, Computational ﬂuid dynamics for urban physics: importance, scales,
+gains on the indoor wall temperatures is also quantiﬁed. Trees decrease             possibilities, limitations and ten tips and tricks towards accurate and reliable sim-
+MRT during daytime with solar shadowing, but increase MRT during            ulations, Build. Environ. 91 (2015) 219–245, https://doi .org/10.1016/j.buildenv.
+nighttime with their leaves limiting the radiative cooling with the clear         2015.02.015.
+sky. Indoor solar gains increase the average wall temperatures and the       [4] A.J. Arnﬁeld, Two decades of urban climate research: a review of turbulence, ex-
+                                                                                         changes of energy and water, and the urban heat island, Int. J. Climatol. 23 (1)
+cooling eﬀort during daytime. The inﬂuence of rare specular reﬂections           (2003) 1–26, https://doi .org/10.1002/joc .859.
+of direct solar radiation on MCM results has been documented.                 [5] N. Villefranque, F. Hourdin, L. d’Alençon, S. Blanco, O. Boucher, C. Caliot, C.
+   Future work includes improvements to the current model and appli-            Coustet, J. Dauchet, M.E. Haﬁ, V. Eymet, O. Farges, V. Forest, R. Fournier, J.
+cations to real cities. Some improvements to this model could include            Gautrais, V. Masson, B. Piaud, R. Schoetter, The “teapot in a city”: a paradigm
+                                                                                                                   shift in urban climate modeling,  Sci. Adv. 8 (27) (2022) eabp8934, https://
+the development of a model for the air temperatures inside the build-
+                                                                                               doi.org/10.1126/sciadv.abp8934.
+ing, the addition of radiation in semi-transparent media and conduction       [6] C.S.B. Grimmond, M. Blackett, M.J. Best, J. Barlow, J.-J. Baik, S.E. Belcher, S.I.
+with volumetric heat sources, and the consideration of non-linear ra-           Bohnenstengel, I. Calmet, F. Chen, A. Dandou, K. Fortuniak, M.L. Gouvea, R. Hamdi,
+
+                                                                        12
+
+PAGE 13
+C. Caliot, L. d’Alençon, S. Blanco et al.                                                                                       International Journal of Heat and Mass Transfer 222 (2024) 125139
+
+
+    M. Hendry, T. Kawai, Y. Kawamoto, H. Kondo, E.S. Krayenhoﬀ, S.-H. Lee, T. Lori-      [20] L. Ibarrart, S. Blanco, C. Caliot, J. Dauchet, S. Eibner, M. El-Haﬁ, O. Farges, V.
+     dan, A. Martilli, V. Masson, S. Miao, K. Oleson, G. Pigeon, A. Porson, Y.-H. Ryu, F.            Forest, R. Fournier, J. Gautrais, R. Konduru, L. Penazzi, J.-M. Tregan, T. Vourc’h, D.
+     Salamanca, L. Shashua-Bar, G.-J. Steeneveld, M. Tombrou, J. Voogt, D. Young, N.          Yaacoub, Advection, diﬀusion and linear transport in a single path-sampling Monte-
+     Zhang, The international urban energy balance models comparison project: ﬁrst re-           Carlo algorithm: getting insensitive to geometrical reﬁnement, working paper or
+      sults from phase 1, J. Appl. Meteorol. Climatol. 49 (6) (2010) 1268–1292, https://            preprint, Oct. 2022.
+     doi.org/10.1175/2010JAMC2354.1.                                                [21] J. Novák, I. Georgiev, J. Hanika, W. Jarosz, Monte Carlo methods for volumetric
+ [7] V. Masson, A physically-based scheme for the urban energy budget in atmospheric             light transport simulation, Comput. Graph. Forum 37 (2) (2018) 551–576, https://
+     models, Bound.-Layer Meteorol. 94 (3) (2000) 357–397, https://doi .org/10.1023/A:           doi.org/10.1111/cgf.13383.
+    1002463829265.                                                                 [22]  I. Wald, S. Woop, C. Benthin, G.S. Johnson, M. Ernst, Embree: a kernel framework
+ [8] K.W. Oleson, G.B. Bonan, J. Feddema, M. Vertenstein, C.S.B. Grimmond, An urban            for eﬃcient CPU ray tracing, ACM Trans. Graph. 33 (4) (2014) 1–8, https://doi.org/
+     parameterization for a global climate model. Part I: formulation and evaluation for         10.1145/2601097.2601199.
+    two cities, J. Appl. Meteorol. Climatol. 47 (4) (2008) 1038–1060, https://doi .org/      [23] L. Penazzi, S. Blanco, C. Caliot, C. Coustet, M. El-Haﬁ, R. Fournier, J. Gautrais, M.
+    10.1175/2007JAMC1597.1.                                                                  Sans, A. Golijanek-Jedrzejczyk, Path integrals formulations leading to propagator
+ [9] J. Bouyer, C. Inard, M. Musy, Microclimatic coupling as a solution to improve build-           evaluation for coupled linear physics in large geometric models, working paper or
+     ing energy simulation in an urban context, Energy Build. 43 (7) (2011) 1549–1559,            preprint, Nov. 2022.
+     https://doi .org/10.1016/j.enbuild.2011.02.010.                                     [24] H. Janssen, B. Blocken, J. Carmeliet, Conservative modelling of the moisture and
+[10] Y. Toparlar, B. Blocken, B. Maiheu, G.J.F.v. Heijst, A review on the CFD analysis           heat transfer in building components under atmospheric excitation, Int. J. Heat Mass
+      of urban microclimate, Renew. Sustain. Energy Rev. 80 (2017) 1613–1640, https://            Transf. 50 (5–6) (2007) 1128–1140, https://doi.org/10.1016/j.ijheatmasstransfer .
+     doi.org/10.1016/j.rser .2017.05.248.                                              2006.06.048.
+[11] H. Ge, V.R. McClung, S. Zhang, Impact of balcony thermal bridges on the overall      [25] M. Bati, S. Blanco, C. Coustet, V. Eymet, V. Forest, R. Fournier, J. Gautrais, N.
+     thermal performance of multi-unit residential buildings: a case study, Energy Build.           Mellado, M. Paulin, B. Piaud, Coupling conduction, convection and radiative trans-
+    60 (2013) 163–173, https://doi .org/10.1016/j.enbuild.2013.01.004.                             fer in a single path-space: application to infrared rendering, ACM Trans. Graph.
+[12] J. del Coz Díaz, P. García Nieto, C. Betegón Biempica, M. Prendes Gero, Analysis           42, Proceedings of SIGGRAPH (2023) 1–20, https://doi .org/10.1145/3592121, hal-
+    and optimization of the heat-insulating light concrete hollow brick walls design by          04090428v2.
+     the ﬁnite element method, Appl. Therm. Eng. 27 (8–9) (2007) 1445–1456, https://      [26] J.K. Salmon, M.A. Moraes, R.O. Dror, D.E. Shaw, Parallel random numbers: as easy
+     doi.org/10.1016/j.applthermaleng .2006.10.010.                                              as 1, 2, 3, in: Proceedings of 2011 International Conference for High Performance
+[13] J. Delatorre, G. Baud, J.J. Bézian, S. Blanco, C. Caliot, J.F. Cornet, C. Coustet, J.          Computing, Networking, Storage and Analysis, SC’11, Association for Computing
+     Dauchet, M. El Haﬁ, V. Eymet, R. Fournier, J. Gautrais, O. Gourmel, D. Joseph, N.          Machinery, New York, NY, USA, 2011.
+     Meilhac, A. Pajot, M. Paulin, P. Perez, B. Piaud, M. Roger, J. Rolland, F. Veynandt,      [27] A. Haji-Sheikh, E.M. Sparrow, The ﬂoating random walk and its application to
+      S. Weitz, Monte Carlo advances and concentrated solar applications, Sol. Energy         Monte Carlo solutions of heat equations, SIAM  J. Appl. Math. 14 (2) (1966)
+    103 (2014) 653–681, https://doi .org/10.1016/j.solener .2013.02.035.                      370–389, https://doi.org/10.1137/0114031.
+[14] R. Fournier, S. Blanco, V. Eymet, M.E. Haﬁ, C. Spiesser, Radiative, conductive and      [28] K.K. Sabelfeld, A global random walk on spheres algorithm for transient heat equa-
+     convective heat-transfers in a single Monte Carlo algorithm, J. Phys. Conf. Ser. 676            tion and some extensions, Monte Carlo Methods Appl. 25 (1) (2019) 85–96, https://
+     (2016) 012007, https://doi .org/10.1088/1742-6596/676/1/012007.                         doi.org/10.1515/mcma-2019-2032.
+[15] C. Caliot, S. Blanco, C. Coustet, M.E. Haﬁ, V. Eymet, R. Fournier, B. Piaud, Combined      [29] N. Villefranque, R. Fournier, F. Couvreux, S. Blanco, C. Cornet, V. Eymet, V. Forest,
+     conductive-radiative heat transfer analysis in complex geometry using the Monte            J.-M. Tregan, A path-tracing Monte Carlo library for 3-d radiative transfer in highly
+     Carlo method, in: CTRPM-VI - 6th Computational Thermal Radiation in Participating           resolved cloudy atmospheres, J. Adv. Model. Earth Syst. 11 (8) (2019) 2449–2473,
+     Media, p. 9, 2018.                                                                             https://doi .org/10.1029/2018MS001602.
+[16] L. Ibarrart, C. Caliot, M. El Haﬁ, R. Fournier, S. Blanco, S. Dutour, J. Dauchet,      [30] C. Caliot, R. Schoetter, V. Forest, V. Eymet, T.-Y. Chung, Model of spectral and direc-
+     J.-M. Tregan, V. Eymet, V. Forest, Combined conductive-convective-radiative heat            tional radiative transfer in complex urban canopies with participating atmospheres,
+      transfer in complex geometry using the Monte Carlo method: application to so-           boundary-layer meteorology, https://doi .org/10.1007/s10546-022-00750-5, Oct.
+      lar receivers, in: International Heat Transfer Conference, vol. 2018-August, 2018,          2022.
+     pp. 8135–8142, cited by:4, www.scopus.com.                                        [31] R. Perez, R. Seals, J. Michalsky, All-weather model for sky luminance distribution—
+[17] M. Sans, O. Farges, V. Schick, C. Moyne, G. Parent, Modeling the ﬂash method by           preliminary conﬁguration and validation, Sol. Energy 50 (3) (1993) 235–245,
+     using a conducto-radiative Monte Carlo algorithm: application to porous media, in:            https://doi .org/10.1016/0038-092X(93)90017-I.
+     Proceeding of Proceedings of the 9th International Symposium on Radiative Trans-      [32] Méso-Star, Star-engine library for Monte Carlo numerical simulations, https://gitlab .
+       fer, RAD-19, Begellhouse, Athens, Greece, 2019, pp. 319–326.                        com/meso-star /star -engine.
+[18] G.A. Mikhailov, Randomized Monte Carlo algorithms for problems with random      [33] C. Caliot, R. Schoetter, V. Forest, V. Eymet, T.-Y. Chung, Starter pack and valida-
+     parameters (“double randomization” method), Numer. Anal. Appl. 12 (2) (2019)            tion scripts for the Monte- Carlo-based urban radiative transfer model described
+     155–165, https://doi .org/10.1134/S1995423919020058.                                      in “model of spectral and directional radiative transfer in complex urban canopies
+[19] J.-M. Tregan, J.-L. Amestoy, M. Bati, J.-J. Bézian, S. Blanco, L. Brunel, C. Caliot,           with participating atmospheres”, submitted to boundary-layer meteorology, https://
+      J. Charon, J.-F. Cornet, C. Coustet, L. D’alençon, J. Dauchet, S. Dutour, S. Eibner,           doi.org/10.5281/zenodo.6370467, Mar. 2022.
+    M. El-Haﬁ, V. Eymet, O. Farges, V. Forest, R. Fournier, M. Galtier, V. Gattepaille,      [34] C. Wyman, P.-P. Sloan, P. Shirley, Simple analytic approximations to the CIE XYZ
+      J. Gautrais, Z. He, F. Hourdin, L. Ibarrart, J.-L. Joly, P. Lapeyre, P. Lavieille, M.-H.            color matching functions, J. Comput. Graph. Tech. 2 (2) (2013) 1–11.
+     Lecureux, J. Lluc, M. Miscevic, N.C. Mourtaday, Y. Nyﬀenegger-Pere, L.P. Pelissier,      [35] Radiation transfer model intercomparison RAMI V, https://rami-benchmark.jrc.ec.
+      L. Penazzi, B. Piaud, C. Rodrigues-Viguier, G. Roques, M. Roger, T. Saez, G. Ter-          europa.eu/, 2020, https://dart.omp.eu/index.php #/doc.
+      rée, N. Villefranque, T. Vourc’h, D. Yaacoub, Coupling radiative, conductive and
+     convective heat-transfers in a single Monte Carlo algorithm: a general theoretical
+     framework for linear situations, working paper or preprint, Oct. 2022.
+
+
+
+
+
+                                                                        13
