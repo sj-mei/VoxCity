@@ -11,6 +11,9 @@ def get_voxel_color_map(color_scheme='default'):
     and positive values represent natural/ground surface elements.
     """
     if color_scheme == 'default':
+        # Natural cover uses intuitive greens/blues; developed land uses
+        # muted terracotta, inspired by the NLCD developed-class red palette.
+        # Roads use asphalt gray and building land cover uses concrete gray.
         return {
             -99: [0, 0, 0],
             -30: [255, 0, 102],
@@ -25,18 +28,18 @@ def get_voxel_color_map(color_scheme='default'):
             -2: [78, 99, 63],
             -1: [188, 143, 143],
             1: [239, 228, 176],
-            2: [123, 130, 59],
+            2: [76, 175, 80],
             3: [97, 140, 86],
             4: [112, 120, 56],
             5: [116, 150, 66],
-            6: [187, 204, 40],
+            6: [174, 213, 129],
             7: [77, 118, 99],
             8: [22, 61, 51],
-            9: [44, 66, 133],
+            9: [33, 150, 243],
             10: [205, 215, 224],
-            11: [108, 119, 129],
-            12: [59, 62, 87],
-            13: [108, 119, 129],
+            11: [216, 147, 130],
+            12: [55, 55, 55],
+            13: [158, 158, 158],
             14: [239, 228, 176],
         }
     elif color_scheme == 'high_contrast':
