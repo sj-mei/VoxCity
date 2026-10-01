@@ -321,6 +321,178 @@ def create_voxel_mesh(voxel_array, class_id, meshsize=1.0, building_id_grid=None
 
     return mesh
 
+def create_air_surface_mesh(voxel_array, class_id=None, meshsize=1.0, building_id_grid=None):
+    """Extract air-adjacent voxel faces, including upward model-top faces.
+
+    Copied from create_voxel_mesh, with strict air-neighbour boundary rules.
+    class_id=None selects all non-air classes automatically; an integer or
+    iterable selects specific materials. Other solid classes (including tree
+    canopy) never expose a face. Upward faces at the top of the array are
+    retained as exposed roofs or ground. Side and bottom array-edge cuts
+    are excluded. In-bounds air cavities are included (no flood fill).
+    Each square face becomes two triangles, scaled by meshsize in meters.
+    Array axes (u, v, z) map to scene coordinates (x=v, y=u, z).
+    Metadata contains face_voxel_class for every triangle and building_id
+    when a building class and building_id_grid are supplied. Building IDs
+    are only meaningful for triangles whose source class is a building.
+    Returns None if no selected voxels or eligible air-adjacent faces exist.
+    """
+    _require_trimesh()
+    # Normalize class_id to a tuple of ints so a single class and a group of
+    # classes (e.g. building -3 + window -16) share one code path.
+    if class_id is None:
+        class_ids = tuple(int(c) for c in np.unique(voxel_array) if c != 0)
+    elif isinstance(class_id, (int, np.integer)):
+        class_ids = (int(class_id),)
+    else:
+        class_ids = tuple(int(c) for c in class_id)
+    class_ids = tuple(c for c in class_ids if c != 0)
+    class_ids_set = set(class_ids)
+    # Find voxels belonging to any of the requested classes
+    voxel_coords = np.argwhere(np.isin(voxel_array, class_ids))
+
+    if building_id_grid is not None:
+        building_id_grid_uv = np.asarray(building_id_grid)
+
+    if len(voxel_coords) == 0:
+        return None
+
+    nx, ny, nz = voxel_array.shape
+
+    # Array offsets paired with scene-space face planes.
+    direction_offsets = np.array([
+        [0, 1, 0],   # +v / east / scene +x
+        [0, -1, 0],  # -v / west / scene -x
+        [1, 0, 0],   # +u / north / scene +y
+        [-1, 0, 0],  # -u / south / scene -y
+        [0, 0, 1],   # +z / up
+        [0, 0, -1],  # -z / down
+    ], dtype=np.intp)
+
+    # Unit face vertices in scene coordinates (x=east/v, y=north/u, z=up).
+    unit_faces = np.array([
+        [[1, 0, 0], [1, 1, 0], [1, 1, 1], [1, 0, 1]],  # +x / east
+        [[0, 0, 0], [0, 0, 1], [0, 1, 1], [0, 1, 0]],  # -x / west
+        [[0, 1, 0], [0, 1, 1], [1, 1, 1], [1, 1, 0]],  # +y / north
+        [[0, 0, 0], [1, 0, 0], [1, 0, 1], [0, 0, 1]],  # -y / south
+        [[0, 0, 1], [1, 0, 1], [1, 1, 1], [0, 1, 1]],  # +z / up
+        [[0, 0, 0], [0, 1, 0], [1, 1, 0], [1, 0, 0]],  # -z / down
+    ], dtype=np.float64)
+
+    face_normal_vectors = np.array([
+        [1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1],
+    ], dtype=np.float64)
+
+    # Collect per-direction boundary face data
+    all_face_verts = []      # list of (M, 4, 3) arrays
+    all_face_normals = []    # list of (M, 3) arrays
+    all_building_ids_list = []  # list of (M,) arrays  (only when tracking)
+    all_voxel_classes_list = []  # list of (M,) arrays  (source voxel class per face)
+    track_ids = (
+        bool(class_ids_set & set(BUILDING_SURFACE_CLASSES))
+        and building_id_grid is not None
+    )
+
+    for d in range(6):
+        adj = voxel_coords + direction_offsets[d]  # (N, 3)
+
+        # Out-of-bounds mask → always a boundary
+        oob = (
+            (adj[:, 0] < 0) | (adj[:, 0] >= nx) |
+            (adj[:, 1] < 0) | (adj[:, 1] >= ny) |
+            (adj[:, 2] < 0) | (adj[:, 2] >= nz)
+        )
+
+        # In-bounds: look up adjacent voxel value
+        adj_clamped = adj.copy()
+        adj_clamped[oob] = 0  # safe dummy index
+        adj_values = voxel_array[adj_clamped[:, 0], adj_clamped[:, 1], adj_clamped[:, 2]]
+
+        # Air inside the array exposes faces; the open model top does too.
+        # Keep top-layer roofs, but exclude artificial side and bottom cuts.
+        is_boundary = (~oob) & (adj_values == 0)
+        if d == 4:  # +z / up: only this direction can cross the model top
+            is_boundary |= oob
+        # Voxels with a boundary face in this direction
+        face_coords = voxel_coords[is_boundary]  # (M, 3)
+        if len(face_coords) == 0:
+            continue
+
+        # Generate 4 vertices per face: array (u, v, z) maps to scene (x=v, y=u, z).
+        scene_coords = np.column_stack([face_coords[:, 1], face_coords[:, 0], face_coords[:, 2]])
+        verts = (unit_faces[d][np.newaxis, :, :] + scene_coords[:, np.newaxis, :]) * meshsize
+        all_face_verts.append(verts)
+
+        # Normal repeated M times
+        normals_d = np.broadcast_to(face_normal_vectors[d], (len(face_coords), 3)).copy()
+        all_face_normals.append(normals_d)
+
+        if track_ids:
+            ids = building_id_grid_uv[face_coords[:, 0], face_coords[:, 1]]
+            all_building_ids_list.append(ids)
+        src_classes = voxel_array[face_coords[:, 0], face_coords[:, 1], face_coords[:, 2]]
+        all_voxel_classes_list.append(src_classes)
+
+    if not all_face_verts:
+        return None
+
+    # Concatenate all directions
+    all_verts = np.concatenate(all_face_verts, axis=0)     # (F, 4, 3)
+    all_normals = np.concatenate(all_face_normals, axis=0)  # (F, 3)
+    n_faces_quad = all_verts.shape[0]
+
+    # Flatten vertices: (F*4, 3)
+    vertices = all_verts.reshape(-1, 3)
+
+    # Build triangle face indices: each quad → 2 triangles
+    base_idx = np.arange(n_faces_quad, dtype=np.intp) * 4  # (F,)
+    tri1 = np.column_stack([base_idx, base_idx + 1, base_idx + 2])
+    tri2 = np.column_stack([base_idx, base_idx + 2, base_idx + 3])
+    faces = np.empty((n_faces_quad * 2, 3), dtype=np.intp)
+    faces[0::2] = tri1
+    faces[1::2] = tri2
+
+    # Duplicate normals for 2 triangles per quad
+    face_normals_arr = np.empty((n_faces_quad * 2, 3), dtype=np.float64)
+    face_normals_arr[0::2] = all_normals
+    face_normals_arr[1::2] = all_normals
+
+    # Create mesh
+    mesh = trimesh.Trimesh(
+        vertices=vertices,
+        faces=faces,
+        face_normals=face_normals_arr,
+    )
+
+    # Merge vertices that are at the same position
+    mesh.merge_vertices()
+
+    # Ensure metadata dict exists
+    if not hasattr(mesh, 'metadata') or mesh.metadata is None:
+        mesh.metadata = {}
+
+    # Store intended per-triangle normals to avoid reliance on auto-computed normals
+    mesh.metadata['provided_face_normals'] = face_normals_arr
+
+    # Add building IDs as metadata for buildings
+    if track_ids and all_building_ids_list:
+        bid_arr = np.concatenate(all_building_ids_list)   # (F,)
+        # Duplicate for 2 triangles per quad
+        bid_tris = np.empty(n_faces_quad * 2, dtype=bid_arr.dtype)
+        bid_tris[0::2] = bid_arr
+        bid_tris[1::2] = bid_arr
+        mesh.metadata['building_id'] = bid_tris
+
+    # Add per-face source voxel class (e.g. window -16 vs building -3)
+    if all_voxel_classes_list:
+        cls_arr = np.concatenate(all_voxel_classes_list)   # (F,)
+        cls_tris = np.empty(n_faces_quad * 2, dtype=cls_arr.dtype)
+        cls_tris[0::2] = cls_arr
+        cls_tris[1::2] = cls_arr
+        mesh.metadata['face_voxel_class'] = cls_tris
+
+    return mesh
+
 def create_sim_surface_mesh(sim_grid, dem_grid,
                             meshsize=1.0, z_offset=1.5,
                             cmap_name='viridis',

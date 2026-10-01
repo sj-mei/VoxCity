@@ -20,6 +20,7 @@ from .builder import MeshBuilder
 from .palette import get_voxel_color_map
 from ..geoprocessor.mesh import create_sim_surface_mesh
 from ..errors import ConfigurationError
+from ..utils.classes import LAND_COVER_CLASSES, VOXEL_CODES
 try:
     import pyvista as pv
 except ImportError:  # optional dependency
@@ -215,6 +216,8 @@ def visualize_voxcity_plotly(
     if building_id_grid is not None and vox is not None:
         _bid_aligned = np.asarray(building_id_grid)
 
+    legend_classes = set()
+
     def add_faces(mask, plane, color_rgb, track_building_ids=False):
         """Create a Plotly Mesh3d trace for faces of a single plane direction.
         
@@ -290,10 +293,15 @@ def visualize_voxcity_plotly(
                 flatshading=False,
                 lighting=lighting,
                 lightposition=dict(x=lx, y=ly, z=lz),
-                name=f"{plane}",
+                name=(LAND_COVER_CLASSES.get(int(cls), f"Land cover {cls}") + " (land cover)"
+                      if int(cls) > 0 else
+                      VOXEL_CODES.get(int(cls), "Window" if int(cls) == -16 else f"Voxel class {cls}")),
+                legendgroup=f"voxel_class_{int(cls)}",
+                showlegend=int(cls) not in legend_classes,
                 meta=trace_meta,
             )
         )
+        legend_classes.add(int(cls))
 
     # Draw voxel faces
     if vox is not None and classes_to_draw:
